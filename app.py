@@ -8,6 +8,7 @@ st.set_page_config(page_title="📱 문자 보내기", page_icon="📱", layout=
 
 st.title("📱 문자 보내기 (Streamlit 버전) 📱")
 
+
 # ------------------------------------------------
 # PC 화면: 번호 & 문자 입력 영역
 # ------------------------------------------------
@@ -36,12 +37,13 @@ if "p" not in st.query_params and "m" not in st.query_params:
             st.error("문자 내용을 입력하세요.")
             st.stop()
 
+        # Base64 인코딩 (UTF-8)
         encoded_msg = base64.b64encode(msg_text.encode("utf-8")).decode()
 
         p_param = urllib.parse.quote(",".join(phones))
-        m_param = urllib.parse.quote(encoded_msg)
+        m_param = encoded_msg   # 🔥 Streamlit이 자동 디코딩하므로 인코딩 한 번만 하면 됨
 
-        # 🔥 여기 수정됨: 실제 Streamlit 주소 사용!
+        # 🔥 당신의 Streamlit 주소
         final_url = f"https://sorinng.streamlit.app/?p={p_param}&m={m_param}"
 
         st.subheader("📲 QR 코드")
@@ -53,17 +55,22 @@ if "p" not in st.query_params and "m" not in st.query_params:
         st.write("📌 아래 주소를 복사해서 사용할 수도 있습니다.")
         st.code(final_url)
 
+
 # ------------------------------------------------
 # 모바일 화면: QR 파라미터 감지 → 문자 보내기 버튼 생성
 # ------------------------------------------------
 else:
+
     st.subheader("📨 문자 보내기")
 
+    # URL 파라미터 가져오기
     p = st.query_params.get("p", [""])[0]
     m = st.query_params.get("m", [""])[0]
 
-    phones = urllib.parse.unquote(p).split(",")
-    decoded_msg = base64.b64decode(urllib.parse.unquote(m)).decode("utf-8")
+    phones = p.split(",")
+
+    # ✔ Base64 디코딩 (중복 디코딩 금지)
+    decoded_msg = base64.b64decode(m).decode("utf-8")
 
     # ------------------------------
     # 전체 문자 보내기 버튼
