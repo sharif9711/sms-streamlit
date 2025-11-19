@@ -1,5 +1,3 @@
 qrcode
 streamlit
-supabase
-gotrue
-realtime
+supabase-py
