@@ -6,7 +6,7 @@ import urllib.parse
 
 st.set_page_config(page_title="📱 문자 보내기", page_icon="📱", layout="centered")
 
-st.title("📱 문자 보내기 (Streamlit 버전) 📱")
+st.title("📱 문자 보내기 📱")
 
 
 # ------------------------------------------------
@@ -135,3 +135,4 @@ else:
             """,
             unsafe_allow_html=True
         )
+
