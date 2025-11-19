@@ -1,18 +1,30 @@
 import streamlit as st
 import qrcode
 from io import BytesIO
-import base64
+import random
+import string
 import urllib.parse
 
 st.set_page_config(page_title="📱 문자 보내기", page_icon="📱", layout="centered")
-
-st.title("📱 문자 보내기 📱")
+st.title("📱 문자 보내기 (Streamlit 버전) 📱")
 
 
 # ------------------------------------------------
-# PC 화면: 번호 + 문자 입력 → QR 생성
+# 메시지를 key로 저장하는 함수
 # ------------------------------------------------
-if "p" not in st.query_params and "m" not in st.query_params:
+def generate_key(length=6):
+    chars = string.ascii_uppercase + string.digits
+    return "".join(random.choice(chars) for _ in range(length))
+
+
+if "msg_store" not in st.session_state:
+    st.session_state.msg_store = {}   # {key: 메시지}
+
+
+# ------------------------------------------------
+# PC 화면: 입력 → QR 생성
+# ------------------------------------------------
+if "key" not in st.query_params:
 
     st.subheader("핸드폰 번호 입력")
     phones_text = st.text_area(
@@ -31,7 +43,7 @@ if "p" not in st.query_params and "m" not in st.query_params:
     if st.button("QR 코드 생성"):
         phones = [v.strip() for v in phones_text.split("\n") if v.strip()]
 
-        if len(phones) == 0:
+        if not phones:
             st.error("핸드폰 번호를 입력하세요.")
             st.stop()
 
@@ -39,16 +51,14 @@ if "p" not in st.query_params and "m" not in st.query_params:
             st.error("문자 내용을 입력하세요.")
             st.stop()
 
-        # 🔥 URL-safe Base64 인코딩
-        encoded_msg = base64.urlsafe_b64encode(msg_text.encode("utf-8")).decode().rstrip("=")
+        # 메시지 저장 후 key 부여
+        key = generate_key()
+        st.session_state.msg_store[key] = msg_text
 
         p_param = urllib.parse.quote(",".join(phones))
-        m_param = encoded_msg  # 안전한 문자열
 
-        final_url = (
-            "https://aisw00011.streamlit.app"
-            f"/?p={p_param}&m={m_param}"
-        )
+        # QR 주소 (아주 짧음, 절대 깨지지 않음)
+        final_url = f"https://aisw00011.streamlit.app/?p={p_param}&key={key}"
 
         st.subheader("📲 QR 코드")
         qr = qrcode.make(final_url)
@@ -61,22 +71,22 @@ if "p" not in st.query_params and "m" not in st.query_params:
 
 
 # ------------------------------------------------
-# 모바일 화면: 문자 보내기 버튼 생성
+# 모바일 화면: key로 메시지 복구 → 버튼 생성
 # ------------------------------------------------
 else:
     st.subheader("📨 문자 보내기")
 
     p = st.query_params.get("p", [""])[0]
-    m = st.query_params.get("m", [""])[0]
+    key = st.query_params.get("key", [""])[0]
 
     phones = p.split(",")
 
-    # 🔥 URL-safe Base64 디코딩 (깨짐 없음)
-    pad_len = 4 - (len(m) % 4)
-    if pad_len != 4:
-        m += "=" * pad_len
+    # key로 메시지 복구
+    msg = st.session_state.msg_store.get(key, "")
 
-    decoded_msg = base64.urlsafe_b64decode(m.encode()).decode()
+    if not msg:
+        st.error("메시지를 불러올 수 없습니다. QR 코드를 다시 생성하세요.")
+        st.stop()
 
     # ------------------------------
     # 전체 문자 보내기 버튼
@@ -86,9 +96,9 @@ else:
     isiPhone = "iphone" in st.request.headers["User-Agent"].lower()
 
     if isiPhone:
-        sms_url = f"sms:/open?addresses={','.join(phones)}&body={urllib.parse.quote(decoded_msg)}"
+        sms_url = f"sms:/open?addresses={','.join(phones)}&body={urllib.parse.quote(msg)}"
     else:
-        sms_url = f"sms:{','.join(phones)}?body={urllib.parse.quote(decoded_msg)}"
+        sms_url = f"sms:{','.join(phones)}?body={urllib.parse.quote(msg)}"
 
     st.markdown(
         f"""
@@ -116,7 +126,7 @@ else:
     st.write("### 📱 개별 보내기")
 
     for i, pnum in enumerate(phones):
-        sms_url = f"sms:{pnum}?body={urllib.parse.quote(decoded_msg)}"
+        sms_url = f"sms:{pnum}?body={urllib.parse.quote(msg)}"
 
         st.markdown(
             f"""
@@ -135,5 +145,3 @@ else:
             """,
             unsafe_allow_html=True
         )
-
-
