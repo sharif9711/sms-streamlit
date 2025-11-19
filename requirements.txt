@@ -1,2 +1,5 @@
 qrcode
 streamlit
+supabase
+gotrue
+realtime
