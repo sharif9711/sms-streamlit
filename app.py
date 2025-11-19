@@ -10,7 +10,7 @@ st.title("📱 문자 보내기 (Streamlit 버전) 📱")
 
 
 # ------------------------------------------------
-# PC 화면: 번호 & 문자 입력 영역
+# PC 화면: 번호 + 문자 입력 → QR 생성
 # ------------------------------------------------
 if "p" not in st.query_params and "m" not in st.query_params:
 
@@ -30,21 +30,25 @@ if "p" not in st.query_params and "m" not in st.query_params:
 
     if st.button("QR 코드 생성"):
         phones = [v.strip() for v in phones_text.split("\n") if v.strip()]
+
         if len(phones) == 0:
             st.error("핸드폰 번호를 입력하세요.")
             st.stop()
+
         if not msg_text.strip():
             st.error("문자 내용을 입력하세요.")
             st.stop()
 
-        # Base64 인코딩 (UTF-8)
-        encoded_msg = base64.b64encode(msg_text.encode("utf-8")).decode()
+        # 🔥 URL-safe Base64 인코딩
+        encoded_msg = base64.urlsafe_b64encode(msg_text.encode("utf-8")).decode().rstrip("=")
 
         p_param = urllib.parse.quote(",".join(phones))
-        m_param = encoded_msg   # Streamlit 자동 디코딩 때문에 인코딩은 한 번만 필요
+        m_param = encoded_msg  # 안전한 문자열
 
-        # 🔥 여기 반드시 당신의 URL로!
-        final_url = f"https://sms-app-crzsypmcjzu4baor2zxsge.streamlit.app/?p={p_param}&m={m_param}"
+        final_url = (
+            "https://sms-app-crzsypmcjzu4baor2zxsge.streamlit.app"
+            f"/?p={p_param}&m={m_param}"
+        )
 
         st.subheader("📲 QR 코드")
         qr = qrcode.make(final_url)
@@ -57,20 +61,22 @@ if "p" not in st.query_params and "m" not in st.query_params:
 
 
 # ------------------------------------------------
-# 모바일 화면: QR 파라미터 감지 → 문자 보내기 버튼 생성
+# 모바일 화면: 문자 보내기 버튼 생성
 # ------------------------------------------------
 else:
-
     st.subheader("📨 문자 보내기")
 
-    # URL 파라미터 가져오기
     p = st.query_params.get("p", [""])[0]
     m = st.query_params.get("m", [""])[0]
 
     phones = p.split(",")
 
-    # ✔ Base64 디코딩 (중복 디코딩 금지 → 오류 완전 해결)
-    decoded_msg = base64.b64decode(m).decode("utf-8")
+    # 🔥 URL-safe Base64 디코딩 (깨짐 없음)
+    pad_len = 4 - (len(m) % 4)
+    if pad_len != 4:
+        m += "=" * pad_len
+
+    decoded_msg = base64.urlsafe_b64decode(m.encode()).decode()
 
     # ------------------------------
     # 전체 문자 보내기 버튼
@@ -105,7 +111,7 @@ else:
     st.write("---")
 
     # ------------------------------
-    # 개별 문자 보내기 버튼 생성
+    # 개별 문자 보내기 버튼
     # ------------------------------
     st.write("### 📱 개별 보내기")
 
