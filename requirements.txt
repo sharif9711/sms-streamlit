@@ -1,3 +1,5 @@
-qrcode
 streamlit
-supabase-py
+qrcode
+supabase-python
+pillow
+urllib3
