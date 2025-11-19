@@ -46,7 +46,7 @@ if "p" not in st.query_params and "m" not in st.query_params:
         m_param = encoded_msg  # 안전한 문자열
 
         final_url = (
-            "https://sms-app-crzsypmcjzu4baor2zxsge.streamlit.app"
+            "https://aisw00011.streamlit.app"
             f"/?p={p_param}&m={m_param}"
         )
 
@@ -135,4 +135,5 @@ else:
             """,
             unsafe_allow_html=True
         )
+
 
