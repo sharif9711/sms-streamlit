@@ -41,10 +41,10 @@ if "p" not in st.query_params and "m" not in st.query_params:
         encoded_msg = base64.b64encode(msg_text.encode("utf-8")).decode()
 
         p_param = urllib.parse.quote(",".join(phones))
-        m_param = encoded_msg   # 🔥 Streamlit이 자동 디코딩하므로 인코딩 한 번만 하면 됨
+        m_param = encoded_msg   # Streamlit 자동 디코딩 때문에 인코딩은 한 번만 필요
 
-        # 🔥 당신의 Streamlit 주소
-        final_url = f"https://sorinng.streamlit.app/?p={p_param}&m={m_param}"
+        # 🔥 여기 반드시 당신의 URL로!
+        final_url = f"https://sms-app-crzsypmcjzu4baor2zxsge.streamlit.app/?p={p_param}&m={m_param}"
 
         st.subheader("📲 QR 코드")
         qr = qrcode.make(final_url)
@@ -69,7 +69,7 @@ else:
 
     phones = p.split(",")
 
-    # ✔ Base64 디코딩 (중복 디코딩 금지)
+    # ✔ Base64 디코딩 (중복 디코딩 금지 → 오류 완전 해결)
     decoded_msg = base64.b64decode(m).decode("utf-8")
 
     # ------------------------------
